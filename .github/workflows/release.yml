@@ -31,7 +31,6 @@ jobs:
           npm run lint
           npm run typecheck
           npm run test
-          npm run build
 
       - name: Build standalone binaries
         run: npm run package
