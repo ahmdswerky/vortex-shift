@@ -86,7 +86,6 @@ main() {
     asset_name="$fallback_asset_name"
   fi
   log "Downloading ${asset_name} (${tag})"
-  local tmp_file
   tmp_file="$(mktemp)"
   trap 'rm -f "$tmp_file"' EXIT
   curl -fsSL "$download_url" -o "$tmp_file" || fail "Failed to download binary asset."
