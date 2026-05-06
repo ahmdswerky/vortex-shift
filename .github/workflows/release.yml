@@ -68,4 +68,4 @@ jobs:
             -e VORTEX_SHIFT_VERSION \
             -v "$PWD/install.sh:/tmp/install.sh:ro" \
             rockylinux:9 \
-            bash -lc 'dnf -y install ca-certificates curl && bash /tmp/install.sh && vortex-shift --version'
+            bash -lc 'dnf -y install ca-certificates curl --allowerasing && bash /tmp/install.sh && vortex-shift --version'
