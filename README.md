@@ -168,13 +168,35 @@ The destination server only needs the binary installed. Vortex Shift will manage
 Go back to your **source** server. Run the migration:
 
 ```bash
-vortex-shift source --dest-host YOUR_DESTINATION_IP --config ./vortex-shift.json
+vortex-shift source --config ./vortex-shift.json
 ```
 
-Or with a config file that already has the host:
+**If you have SSH hosts configured in `~/.ssh/config`**, Vortex Shift will show an interactive picker automatically — no flags needed:
+
+```
+? Select destination server:
+  ❯ prod-server  →  1.2.3.4  (root)
+    staging      →  5.6.7.8  (deploy):2222
+    Enter host manually
+```
+
+Select a host and all connection details (`HostName`, `User`, `Port`, `IdentityFile`) are read from your SSH config automatically.
+
+**To skip the picker and pass the host directly**, use `--dest-host`. You can pass either a real IP/hostname or an SSH config alias:
 
 ```bash
-vortex-shift source --config ./vortex-shift.json
+# pass an SSH config alias — resolves HostName, User, Port, IdentityFile automatically
+vortex-shift source --dest-host prod-server
+
+# or pass an IP directly
+vortex-shift source --dest-host 1.2.3.4
+```
+
+CLI flags always override SSH config values:
+
+```bash
+# use SSH config alias but override the user
+vortex-shift source --dest-host prod-server --dest-user deploy
 ```
 
 **What happens next:**
@@ -306,15 +328,15 @@ Full `vortex-shift.json` shape with all options:
 ### `vortex-shift source` — run the migration
 
 ```
-vortex-shift source --dest-host <host> [options]
-
-Required:
-  --dest-host <host>       Destination server IP or hostname
+vortex-shift source [options]
 
 Options:
-  --dest-user <user>       SSH user on destination (default: root)
-  --dest-port <port>       SSH port (default: 22)
-  --ssh-key-path <path>    SSH private key path
+  --dest-host <host>       Destination IP, hostname, or SSH config alias.
+                           If omitted, an interactive picker is shown using
+                           hosts from ~/.ssh/config.
+  --dest-user <user>       SSH user (overrides SSH config, default: root)
+  --dest-port <port>       SSH port (overrides SSH config, default: 22)
+  --ssh-key-path <path>    SSH private key (overrides SSH config IdentityFile)
   --retries <n>            Retries per step (default: 3)
   --resume                 Resume from last checkpoint
   --config <path>          Path to vortex-shift.json
@@ -323,6 +345,13 @@ Options:
   --verbose                Extra debug output
   --yes                    Skip all confirmation prompts
 ```
+
+**SSH config resolution priority** (highest to lowest):
+
+1. CLI flag (e.g. `--dest-user`)
+2. `vortex-shift.json` value
+3. SSH config entry (`~/.ssh/config`)
+4. Built-in default (`root` / port `22`)
 
 ### `vortex-shift destination` — run on destination manually
 
@@ -400,6 +429,24 @@ Runs on the destination. Restores database dumps. Starts all Docker Compose stac
 ---
 
 ## Troubleshooting
+
+**SSH config host not showing in the picker**
+
+Vortex Shift reads `~/.ssh/config` and shows only entries that have both a `Host` alias and a `HostName`. Wildcards (`Host *`) are ignored. Check your config:
+
+```bash
+cat ~/.ssh/config
+```
+
+A valid entry looks like:
+
+```
+Host prod-server
+    HostName 1.2.3.4
+    User root
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+```
 
 **SSH connection refused**
 

@@ -74,6 +74,7 @@ export async function resolveMigrationConfig(
     destinationUser?: string
     destinationPort?: number
     retries?: number
+    sshKeyPath?: string
   } = {}
 ): Promise<MigrationConfig> {
   const fromFile = await loadConfigFile(options.config)
@@ -85,13 +86,14 @@ export async function resolveMigrationConfig(
     (mode === 'destination' ? 'localhost' : '')
 
   if (mode === 'source' && destinationHost.trim().length === 0) {
-    throw new Error('Missing destination host. Provide --dest-host or set destination.host in config.')
+    throw new Error('Missing destination host. Provide --dest-host or select a server.')
   }
 
   const destinationUser = overrides.destinationUser ?? fromFile?.destination.user ?? DEFAULT_SSH_USER
   const destinationPort = overrides.destinationPort ?? fromFile?.destination.port ?? DEFAULT_SSH_PORT
   const sshKeyPath = fallbackSshKeyPath(
-    (options as SourceCommandOptions).sshKeyPath ??
+    overrides.sshKeyPath ??
+      (options as SourceCommandOptions).sshKeyPath ??
       (options as DestinationCommandOptions).sshKeyPath ??
       fromFile?.destination.sshKeyPath
   )

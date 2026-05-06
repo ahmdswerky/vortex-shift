@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import path from 'node:path'
 import { clearCheckpoint, displayCheckpointSummary, loadCheckpoint } from '../core/checkpoint.js'
 import { MigrationError } from '../core/executor.js'
+import { listSSHConfigHosts, type SSHConfigHost } from '../core/ssh-config.js'
 import { runPhase1 } from '../phases/phase1-detect.js'
 import { runPhase2 } from '../phases/phase2-inventory.js'
 import { runPhase3 } from '../phases/phase3-transfer.js'
@@ -14,14 +15,54 @@ import {
   type SourceCommandOptions,
 } from './shared.js'
 import type { Logger } from '../core/logger.js'
-import { confirm } from '../utils/prompt.js'
+import { confirm, input, select } from '../utils/prompt.js'
 
 interface SourceActionOptions extends SourceCommandOptions {
-  destHost: string
+  destHost?: string
   destUser?: string
   destPort?: number
   retries?: number
   resume?: boolean
+}
+
+async function resolveDestinationHost(options: SourceActionOptions): Promise<{
+  host: string
+  sshConfigEntry: SSHConfigHost | null
+}> {
+  const sshHosts = await listSSHConfigHosts()
+
+  // --dest-host was provided — check if it matches an SSH config alias
+  if (options.destHost) {
+    const entry = sshHosts.find((h) => h.alias === options.destHost)
+    return { host: options.destHost, sshConfigEntry: entry ?? null }
+  }
+
+  // No --dest-host — offer SSH config hosts interactively if any exist
+  if (sshHosts.length > 0) {
+    const MANUAL = '__manual__'
+    const choices = [
+      ...sshHosts.map((h) => ({
+        name: `${h.alias}  →  ${h.hostname}${h.user ? `  (${h.user})` : ''}${h.port && h.port !== 22 ? `:${h.port}` : ''}`,
+        value: h.alias,
+      })),
+      { name: 'Enter host manually', value: MANUAL },
+    ]
+
+    const chosen = await select<string>('Select destination server:', choices)
+
+    if (chosen !== MANUAL) {
+      const entry = sshHosts.find((h) => h.alias === chosen) ?? null
+      return { host: chosen, sshConfigEntry: entry }
+    }
+  }
+
+  // Fall back to manual text entry
+  const manualHost = await input('Destination host (IP or hostname):', '')
+  if (!manualHost.trim()) {
+    throw new Error('Destination host is required. Provide --dest-host or select a server.')
+  }
+
+  return { host: manualHost.trim(), sshConfigEntry: null }
 }
 
 async function triggerDestinationPhase4(
@@ -67,7 +108,7 @@ async function triggerDestinationPhase4(
 export function createSourceCommand(getLogger: () => Logger): Command {
   const command = new Command('source')
     .description('Run source-side migration orchestration')
-    .requiredOption('--dest-host <host>', 'Destination host')
+    .option('--dest-host <host>', 'Destination host (IP, hostname, or SSH config alias)')
     .option('--dest-user <user>', 'Destination SSH user')
     .option('--dest-port <port>', 'Destination SSH port', (value) => Number.parseInt(value, 10))
     .option('--retries <count>', 'Step retry count', (value) => Number.parseInt(value, 10))
@@ -78,20 +119,46 @@ export function createSourceCommand(getLogger: () => Logger): Command {
       const logger = getLogger()
       const options = cmd.optsWithGlobals() as SourceActionOptions
 
+      const { host: resolvedHost, sshConfigEntry } = await resolveDestinationHost(options)
+
+      if (sshConfigEntry) {
+        logger.info(
+          `Resolved SSH config alias "${resolvedHost}" → ${sshConfigEntry.hostname}` +
+            (sshConfigEntry.user ? ` (user: ${sshConfigEntry.user})` : '') +
+            (sshConfigEntry.port ? ` (port: ${sshConfigEntry.port})` : '')
+        )
+      }
+
       const overrides: {
         destinationHost?: string
         destinationUser?: string
         destinationPort?: number
         retries?: number
+        sshKeyPath?: string
       } = {
-        destinationHost: options.destHost,
+        // Resolved hostname takes precedence over the alias string
+        destinationHost: sshConfigEntry?.hostname ?? resolvedHost,
       }
+
+      // CLI flags beat SSH config; SSH config beats defaults
       if (options.destUser !== undefined) {
         overrides.destinationUser = options.destUser
+      } else if (sshConfigEntry?.user) {
+        overrides.destinationUser = sshConfigEntry.user
       }
+
       if (options.destPort !== undefined) {
         overrides.destinationPort = options.destPort
+      } else if (sshConfigEntry?.port) {
+        overrides.destinationPort = sshConfigEntry.port
       }
+
+      if (options.sshKeyPath !== undefined) {
+        overrides.sshKeyPath = options.sshKeyPath
+      } else if (sshConfigEntry?.identityFile) {
+        overrides.sshKeyPath = sshConfigEntry.identityFile
+      }
+
       if (options.retries !== undefined) {
         overrides.retries = options.retries
       }
