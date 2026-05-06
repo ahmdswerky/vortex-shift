@@ -1,0 +1,29 @@
+{
+  "root": true,
+  "env": {
+    "es2022": true,
+    "node": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "no-console": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-explicit-any": "error"
+  },
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "config/"
+  ]
+}

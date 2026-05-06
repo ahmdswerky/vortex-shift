@@ -1,0 +1,5 @@
+dist/
+node_modules/
+*.log
+vortex-shift.json
+.vortex-shift/

@@ -1,0 +1,33 @@
+
+> vortex-shift@0.1.0 typecheck
+> tsc --noEmit
+
+src/inventory/volumes.ts(64,18): error TS2379: Argument of type '{ name: string; driver: string; mountpoint: string; size: number; linkedProject: string | undefined; }' is not assignable to parameter of type 'DockerVolume' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'linkedProject' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/phases/phase3-transfer.ts(2,30): error TS7016: Could not find a declaration file for module 'cli-progress'. '/home/swerky/dev/projects/vortex-shift/node_modules/cli-progress/cli-progress.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cli-progress` if it exists or add a new declaration (.d.ts) file containing `declare module 'cli-progress';`
+src/transfer/db-dumps.ts(101,9): error TS2412: Type 'undefined' is not assignable to type 'string' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/utils/fs.ts(4,17): error TS7016: Could not find a declaration file for module 'fs-extra'. '/home/swerky/dev/projects/vortex-shift/node_modules/fs-extra/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/fs-extra` if it exists or add a new declaration (.d.ts) file containing `declare module 'fs-extra';`
+src/utils/shell.ts(71,26): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(templateString_0: TemplateStringsArray, ...templateString: TemplateExpression[]): ResultPromise<{}>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'TemplateStringsArray'.
+  Overload 2 of 4, '(file: string | URL, arguments?: readonly string[] | undefined, options?: Options | undefined): ResultPromise<Options>', gave the following error.
+    Argument of type '{ timeout: number | undefined; reject: true; preferLocal?: boolean; localDir?: string | URL; node?: boolean; nodeOptions?: readonly string[]; nodePath?: string | URL; shell?: boolean | string | URL; ... 29 more ...; windowsVerbatimArguments?: boolean; }' is not assignable to parameter of type 'Options' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'timeout' are incompatible.
+        Type 'number | undefined' is not assignable to type 'number'.
+          Type 'undefined' is not assignable to type 'number'.
+src/utils/shell.ts(80,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/utils/shell.ts(96,24): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(templateString_0: TemplateStringsArray, ...templateString: TemplateExpression[]): ResultPromise<{}>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'TemplateStringsArray'.
+  Overload 2 of 4, '(file: string | URL, arguments?: readonly string[] | undefined, options?: Options | undefined): ResultPromise<Options>', gave the following error.
+    Argument of type '{ timeout: number | undefined; all: false; reject: false; preferLocal?: boolean; localDir?: string | URL; node?: boolean; nodeOptions?: readonly string[]; nodePath?: string | URL; shell?: boolean | string | URL; ... 28 more ...; windowsVerbatimArguments?: boolean; }' is not assignable to parameter of type 'Options' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'timeout' are incompatible.
+        Type 'number | undefined' is not assignable to type 'number'.
+          Type 'undefined' is not assignable to type 'number'.
+src/utils/shell.ts(129,89): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
