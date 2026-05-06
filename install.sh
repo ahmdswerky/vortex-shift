@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROGRAM_NAME="vortex-shift"
 INSTALL_PATH="/usr/local/bin/${PROGRAM_NAME}"
-REPO="${VORTEX_SHIFT_REPO:-USER/vortex-shift}"
+REPO="${VORTEX_SHIFT_REPO:-ahmdswerky/vortex-shift}"
 
 log() {
   printf '[install] %s\n' "$1"
