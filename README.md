@@ -57,7 +57,7 @@ The **destination** server needs:
 Run this on **each server** (source and destination):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/vortex-shift/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ahmdswerky/vortex-shift/main/install.sh | bash
 ```
 
 This downloads the correct binary for your architecture and places it at `/usr/local/bin/vortex-shift`.
@@ -107,7 +107,7 @@ rsync --version
 SSH into your **source** server and install:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/vortex-shift/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ahmdswerky/vortex-shift/main/install.sh | bash
 vortex-shift --version
 ```
 
@@ -155,7 +155,7 @@ Add any HTTP health checks for services you want verified after migration. Leave
 SSH into your **destination** server and install:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/vortex-shift/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ahmdswerky/vortex-shift/main/install.sh | bash
 vortex-shift --version
 ```
 
