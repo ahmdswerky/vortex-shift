@@ -274,6 +274,11 @@ export async function runPhase1(ctx: MigrationContext): Promise<void> {
       id: 'detect.ssh-keys',
       name: 'Detect existing SSH keys',
       run: async () => {
+        if (ctx.mode !== 'source') {
+          ctx.log.info('Skipping SSH key detection in destination mode')
+          return
+        }
+
         const keyPath = await detectSSHKey()
         phaseState.sshKeyPath = keyPath
         if (keyPath) {
@@ -290,6 +295,11 @@ export async function runPhase1(ctx: MigrationContext): Promise<void> {
       id: 'detect.ssh-setup',
       name: 'Setup SSH key if missing',
       run: async () => {
+        if (ctx.mode !== 'source') {
+          ctx.log.info('Skipping SSH key setup in destination mode')
+          return
+        }
+
         if (!phaseState.requiresSSHSetup) {
           ctx.log.info('SSH key exists; skipping key generation step')
           return
@@ -307,6 +317,11 @@ export async function runPhase1(ctx: MigrationContext): Promise<void> {
       id: 'detect.ssh-test',
       name: 'Test SSH connectivity to destination',
       run: async () => {
+        if (ctx.mode !== 'source') {
+          ctx.log.info('Skipping SSH connectivity test in destination mode')
+          return
+        }
+
         const keyPath = phaseState.sshKeyPath ?? ctx.config.destination.sshKeyPath
         if (!keyPath) {
           throw new Error('No SSH key path available for SSH connectivity test.')
@@ -361,6 +376,11 @@ export async function runPhase1(ctx: MigrationContext): Promise<void> {
       id: 'detect.disk-space',
       name: 'Check destination disk headroom',
       run: async () => {
+        if (ctx.mode !== 'source') {
+          ctx.log.info('Skipping destination disk headroom check in destination mode')
+          return
+        }
+
         const keyPath = phaseState.sshKeyPath ?? ctx.config.destination.sshKeyPath
         if (!keyPath) {
           throw new Error('No SSH key path available for disk space check.')

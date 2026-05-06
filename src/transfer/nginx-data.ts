@@ -10,6 +10,7 @@ export async function transferNginxData(
   snapshot: NginxSnapshot,
   ssh: SSHClient,
   config: MigrationConfig,
+  isDryRun: boolean,
   onProgress?: (progress: RsyncProgress) => void
 ): Promise<TransferResult | null> {
   if (!(await fileExists(snapshot.dataPath))) {
@@ -31,6 +32,7 @@ export async function transferNginxData(
     destinationPath: `${remoteDir}/`,
     sshKeyPath: config.destination.sshKeyPath,
     rsyncExtraArgs: config.transfer.rsyncExtraArgs,
+    dryRun: isDryRun,
   })
 
   const rsyncResult = await transfer.run(onProgress)

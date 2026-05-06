@@ -111,6 +111,11 @@ function logTransfer(logger: MigrationContext['log'], result: TransferResult): v
   )
 }
 
+async function persistTransferResults(ctx: MigrationContext, transferResults: TransferResult[]): Promise<void> {
+  const outputPath = path.join(ctx.config.paths.checkpointDir, 'transfer-results.json')
+  await writeJson(outputPath, transferResults)
+}
+
 async function withSSH<T>(ctx: MigrationContext, task: () => Promise<T>): Promise<T> {
   await ctx.ssh.connect(ctx.config.destination)
   try {
@@ -144,6 +149,7 @@ async function transferDirectory(
     destinationPath: `${destinationDir}/`,
     sshKeyPath: ctx.config.destination.sshKeyPath,
     rsyncExtraArgs: ctx.config.transfer.rsyncExtraArgs,
+    dryRun: ctx.isDryRun,
   })
 
   state.progress.begin(resourceName)
@@ -166,6 +172,22 @@ async function loadManifest(ctx: MigrationContext): Promise<Manifest> {
   }
 
   const manifestPath = path.join(ctx.config.paths.checkpointDir, 'manifest.json')
+  if (ctx.isDryRun && !(await fileExists(manifestPath))) {
+    return {
+      createdAt: new Date().toISOString(),
+      sourceHost: 'dry-run',
+      dockerProjects: [],
+      externalVolumes: [],
+      pm2Apps: [],
+      databases: [],
+      nginxProxyManager: {
+        dataPath: ctx.config.paths.nginxProxyManagerDataPath,
+        version: 'dry-run',
+        proxyHostCount: 0,
+      },
+    }
+  }
+
   return readJson<Manifest>(manifestPath)
 }
 
@@ -201,11 +223,17 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
       name: 'Transfer Docker volumes',
       run: async () => {
         const results = await withSSH(ctx, async () =>
-          transferAllVolumes(state.manifest.externalVolumes, ctx.ssh, ctx.config, (name, progress) => {
-            const resource = `volume:${name}`
-            state.progress.begin(resource)
-            state.progress.update(resource, progress.bytesDone)
-          })
+          transferAllVolumes(
+            state.manifest.externalVolumes,
+            ctx.ssh,
+            ctx.config,
+            ctx.isDryRun,
+            (name, progress) => {
+              const resource = `volume:${name}`
+              state.progress.begin(resource)
+              state.progress.update(resource, progress.bytesDone)
+            }
+          )
         )
 
         for (const result of results) {
@@ -213,6 +241,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
           state.transferResults.push(result)
           logTransfer(ctx.log, result)
         }
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -230,6 +259,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
           state.transferResults.push(result)
           logTransfer(ctx.log, result)
         }
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -243,6 +273,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
         const result = await transferDirectory('db-dumps', dumpDir, dumpDir, ctx, state)
         state.transferResults.push(result)
         logTransfer(ctx.log, result)
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -250,7 +281,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
       name: 'Transfer PM2 app directories',
       run: async () => {
         const results = await withSSH(ctx, async () =>
-          transferPM2Apps(state.manifest.pm2Apps, ctx.ssh, ctx.config, (appName, progress) => {
+          transferPM2Apps(state.manifest.pm2Apps, ctx.ssh, ctx.config, ctx.isDryRun, (appName, progress) => {
             const resource = `pm2-app:${appName}`
             state.progress.begin(resource)
             state.progress.update(resource, progress.bytesDone)
@@ -262,6 +293,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
           state.transferResults.push(result)
           logTransfer(ctx.log, result)
         }
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -278,6 +310,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
         state.progress.addCompleted(result.bytesTransferred)
         state.transferResults.push(result)
         logTransfer(ctx.log, result)
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -285,11 +318,17 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
       name: 'Transfer NGINX Proxy Manager data',
       run: async () => {
         const result = await withSSH(ctx, async () =>
-          transferNginxData(state.manifest.nginxProxyManager, ctx.ssh, ctx.config, (progress) => {
-            const resource = 'nginx-data'
-            state.progress.begin(resource)
-            state.progress.update(resource, progress.bytesDone)
-          })
+          transferNginxData(
+            state.manifest.nginxProxyManager,
+            ctx.ssh,
+            ctx.config,
+            ctx.isDryRun,
+            (progress) => {
+              const resource = 'nginx-data'
+              state.progress.begin(resource)
+              state.progress.update(resource, progress.bytesDone)
+            }
+          )
         )
         if (!result) {
           return
@@ -298,6 +337,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
         state.progress.finish(result.resource, result.bytesTransferred)
         state.transferResults.push(result)
         logTransfer(ctx.log, result)
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
     {
@@ -309,6 +349,10 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
 
         await withSSH(ctx, async () => {
           const remoteManifestPath = path.join(ctx.config.paths.checkpointDir, 'manifest.json')
+          const remoteTransferResultsPath = path.join(
+            ctx.config.paths.checkpointDir,
+            'transfer-results.json'
+          )
           const mkdirResult = await ctx.ssh.exec(
             `mkdir -p ${JSON.stringify(path.dirname(remoteManifestPath))}`
           )
@@ -317,6 +361,14 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
           }
 
           await ctx.ssh.putFile(localManifestPath, remoteManifestPath)
+
+          const localTransferResultsPath = path.join(
+            ctx.config.paths.checkpointDir,
+            'transfer-results.json'
+          )
+          if (await fileExists(localTransferResultsPath)) {
+            await ctx.ssh.putFile(localTransferResultsPath, remoteTransferResultsPath)
+          }
         })
 
         const bytesTransferred = await safeGetSize(localManifestPath)
@@ -329,6 +381,7 @@ export async function runPhase3(ctx: MigrationContext): Promise<void> {
         }
         state.transferResults.push(manifestTransferResult)
         logTransfer(ctx.log, manifestTransferResult)
+        await persistTransferResults(ctx, state.transferResults)
       },
     },
   ]

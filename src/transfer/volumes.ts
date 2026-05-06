@@ -18,6 +18,7 @@ export async function transferVolume(
   volume: DockerVolume,
   ssh: SSHClient,
   config: MigrationConfig,
+  isDryRun: boolean,
   onProgress?: (progress: RsyncProgress) => void
 ): Promise<TransferResult> {
   const remotePath = volume.mountpoint
@@ -35,6 +36,7 @@ export async function transferVolume(
     destinationPath: `${remotePath}/`,
     sshKeyPath: config.destination.sshKeyPath,
     rsyncExtraArgs: config.transfer.rsyncExtraArgs,
+    dryRun: isDryRun,
   })
 
   const result = await transfer.run(onProgress)
@@ -45,12 +47,13 @@ export async function transferAllVolumes(
   volumes: DockerVolume[],
   ssh: SSHClient,
   config: MigrationConfig,
+  isDryRun: boolean,
   onProgress?: (volumeName: string, progress: RsyncProgress) => void
 ): Promise<TransferResult[]> {
   const results: TransferResult[] = []
 
   for (const volume of volumes) {
-    const result = await transferVolume(volume, ssh, config, (progress) => {
+    const result = await transferVolume(volume, ssh, config, isDryRun, (progress) => {
       onProgress?.(volume.name, progress)
     })
     results.push(result)

@@ -20,6 +20,7 @@ export async function transferPM2Apps(
   apps: PM2App[],
   ssh: SSHClient,
   config: MigrationConfig,
+  isDryRun: boolean,
   onProgress?: (appName: string, progress: RsyncProgress) => void
 ): Promise<TransferResult[]> {
   const results: TransferResult[] = []
@@ -44,6 +45,7 @@ export async function transferPM2Apps(
       destinationPath: `${remoteDir}/`,
       sshKeyPath: config.destination.sshKeyPath,
       rsyncExtraArgs: config.transfer.rsyncExtraArgs,
+      dryRun: isDryRun,
     })
 
     const rsyncResult = await transfer.run((progress) => {

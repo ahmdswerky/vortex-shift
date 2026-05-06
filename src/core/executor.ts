@@ -31,6 +31,27 @@ export class StepRunner {
   }
 
   public async run(steps: Step[]): Promise<void> {
+    if (this.ctx.isDryRun) {
+      const planned: string[] = []
+
+      for (const step of steps) {
+        if (isStepDone(this.ctx.checkpoint, step.id)) {
+          this.ctx.log.info(`[dry-run] Skip already completed step: ${step.id}`)
+          continue
+        }
+
+        this.ctx.log.info(`[dry-run] Would run step: ${step.id} (${step.name})`)
+        planned.push(step.id)
+      }
+
+      if (planned.length > 0) {
+        this.ctx.log.info(`[dry-run] Summary: ${planned.length} step(s) would execute.`)
+      } else {
+        this.ctx.log.info('[dry-run] Summary: no pending steps.')
+      }
+      return
+    }
+
     for (const step of steps) {
       if (isStepDone(this.ctx.checkpoint, step.id)) {
         this.ctx.log.info(`Skipping step (already completed): ${step.id}`)
@@ -63,7 +84,11 @@ export class StepRunner {
         this.ctx.log.success(`Completed step: ${step.name}`)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        markStepFailed(this.ctx.checkpoint, step.id, message)
+        markStepFailed(
+          this.ctx.checkpoint,
+          step.id,
+          `${message} | Resume hint: vortex-shift status && vortex-shift source --resume`
+        )
         await saveCheckpoint(this.ctx.config.paths.checkpointDir, this.ctx.checkpoint)
         throw new MigrationError(step.id, this.ctx.checkpoint.phase, error)
       }

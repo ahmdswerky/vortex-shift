@@ -64,8 +64,35 @@ export function displayPublicKey(pubKey: string): void {
 export class SSHClient {
   private readonly client = new NodeSSH()
   private connected = false
+  private dryRun = false
+  private lastConfig: SSHConfig | null = null
+
+  public setDryRun(dryRun: boolean): void {
+    this.dryRun = dryRun
+  }
+
+  private manualSshHint(command = 'echo "vortex-ok"'): string {
+    if (!this.lastConfig) {
+      return 'Manual SSH test: ssh -i ~/.ssh/id_ed25519 -p 22 user@host \'echo "vortex-ok"\''
+    }
+
+    return (
+      `Manual SSH test: ssh -i ${this.lastConfig.sshKeyPath} -p ${this.lastConfig.port} ` +
+      `${this.lastConfig.user}@${this.lastConfig.host} '${command}'`
+    )
+  }
 
   public async connect(config: SSHConfig): Promise<void> {
+    this.lastConfig = config
+
+    if (this.dryRun) {
+      process.stdout.write(
+        `[dry-run][ssh] connect ${config.user}@${config.host}:${config.port} key=${config.sshKeyPath}\n`
+      )
+      this.connected = true
+      return
+    }
+
     try {
       await this.client.connect({
         host: config.host,
@@ -75,22 +102,42 @@ export class SSHClient {
       })
       this.connected = true
     } catch (error) {
-      throw new SSHError(`Failed to connect to ${config.user}@${config.host}:${config.port}`, error)
+      throw new SSHError(
+        `Failed to connect to ${config.user}@${config.host}:${config.port}. ${this.manualSshHint()}`,
+        error
+      )
     }
   }
 
   public async exec(command: string): Promise<{ stdout: string; stderr: string; code: number }> {
     this.assertConnected()
 
+    if (this.dryRun) {
+      process.stdout.write(`[dry-run][ssh] exec ${command}\n`)
+      return { stdout: '', stderr: '', code: 0 }
+    }
+
     try {
       const result = await this.client.execCommand(command)
+      const code = typeof result.code === 'number' ? result.code : 1
+      if (code !== 0) {
+        throw new SSHError(
+          `Remote command exited with code ${code}: ${command}. ${this.manualSshHint(command)}`
+        )
+      }
       return {
         stdout: result.stdout,
         stderr: result.stderr,
-        code: typeof result.code === 'number' ? result.code : 1,
+        code,
       }
     } catch (error) {
-      throw new SSHError(`Remote command failed: ${command}`, error)
+      if (error instanceof SSHError) {
+        throw error
+      }
+      throw new SSHError(
+        `Remote command failed: ${command}. ${this.manualSshHint(command)}`,
+        error
+      )
     }
   }
 
@@ -99,6 +146,11 @@ export class SSHClient {
     onData: (chunk: { stream: 'stdout' | 'stderr'; data: string }) => void
   ): Promise<{ stdout: string; stderr: string; code: number }> {
     this.assertConnected()
+
+    if (this.dryRun) {
+      process.stdout.write(`[dry-run][ssh] execStream ${command}\n`)
+      return { stdout: '', stderr: '', code: 0 }
+    }
 
     try {
       let stdout = ''
@@ -115,34 +167,62 @@ export class SSHClient {
           onData({ stream: 'stderr', data })
         },
       })
+      const code = typeof result.code === 'number' ? result.code : 1
+      if (code !== 0) {
+        throw new SSHError(
+          `Remote streamed command exited with code ${code}: ${command}. ${this.manualSshHint(command)}`
+        )
+      }
 
       return {
         stdout,
         stderr,
-        code: typeof result.code === 'number' ? result.code : 1,
+        code,
       }
     } catch (error) {
-      throw new SSHError(`Remote streamed command failed: ${command}`, error)
+      if (error instanceof SSHError) {
+        throw error
+      }
+      throw new SSHError(
+        `Remote streamed command failed: ${command}. ${this.manualSshHint(command)}`,
+        error
+      )
     }
   }
 
   public async putFile(localPath: string, remotePath: string): Promise<void> {
     this.assertConnected()
 
+    if (this.dryRun) {
+      process.stdout.write(`[dry-run][ssh] putFile ${localPath} -> ${remotePath}\n`)
+      return
+    }
+
     try {
       await this.client.putFile(localPath, remotePath)
     } catch (error) {
-      throw new SSHError(`Failed uploading ${localPath} to ${remotePath}`, error)
+      throw new SSHError(
+        `Failed uploading ${localPath} to ${remotePath}. ${this.manualSshHint()}`,
+        error
+      )
     }
   }
 
   public async getFile(remotePath: string, localPath: string): Promise<void> {
     this.assertConnected()
 
+    if (this.dryRun) {
+      process.stdout.write(`[dry-run][ssh] getFile ${remotePath} -> ${localPath}\n`)
+      return
+    }
+
     try {
       await this.client.getFile(localPath, remotePath)
     } catch (error) {
-      throw new SSHError(`Failed downloading ${remotePath} to ${localPath}`, error)
+      throw new SSHError(
+        `Failed downloading ${remotePath} to ${localPath}. ${this.manualSshHint()}`,
+        error
+      )
     }
   }
 

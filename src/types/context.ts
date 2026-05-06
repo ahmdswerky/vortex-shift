@@ -7,6 +7,7 @@ import type { Logger } from '../core/logger.js'
 export interface MigrationContext {
   mode: 'source' | 'destination'
   config: MigrationConfig
+  isDryRun: boolean
   ssh: SSHClient
   manifest: Manifest | null
   checkpoint: CheckpointState

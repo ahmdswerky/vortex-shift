@@ -4,6 +4,11 @@ import type { CheckpointState } from '../types/checkpoint.js'
 import type { Logger } from './logger.js'
 
 const CHECKPOINT_FILE = 'checkpoint.json'
+const CHECKPOINT_SCHEMA_VERSION = 1
+
+type StoredCheckpoint = Omit<CheckpointState, 'version'> & {
+  version?: number
+}
 
 function getCheckpointPath(dir: string): string {
   return path.join(dir, CHECKPOINT_FILE)
@@ -15,7 +20,25 @@ export async function loadCheckpoint(dir: string): Promise<CheckpointState | nul
     return null
   }
 
-  return readJson<CheckpointState>(checkpointPath)
+  const parsed = await readJson<StoredCheckpoint>(checkpointPath)
+  const version = parsed.version ?? 0
+
+  if (version > CHECKPOINT_SCHEMA_VERSION) {
+    throw new Error(
+      `Unsupported checkpoint schema version ${version}. Supported version is ${CHECKPOINT_SCHEMA_VERSION}.`
+    )
+  }
+
+  const normalized: CheckpointState = {
+    ...parsed,
+    version: CHECKPOINT_SCHEMA_VERSION,
+  }
+
+  if (version !== CHECKPOINT_SCHEMA_VERSION) {
+    await saveCheckpoint(dir, normalized)
+  }
+
+  return normalized
 }
 
 export async function saveCheckpoint(dir: string, state: CheckpointState): Promise<void> {
@@ -67,3 +90,4 @@ export function displayCheckpointSummary(state: CheckpointState, logger: Logger)
 }
 
 export { CHECKPOINT_FILE }
+export { CHECKPOINT_SCHEMA_VERSION }

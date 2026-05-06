@@ -343,265 +343,265 @@
 ## Batch 6 — Phase 4: Post-Migration Validation
 
 ### 6.1 `src/validation/checksums.ts`
-- [ ] `checksumFile(path)` — sha256 of a file
-- [ ] `checksumDir(path)` — recursive sha256 tree (using `find | sha256sum`)
-- [ ] `buildChecksumManifest(paths)` — generate checksum map on source
-- [ ] `verifyChecksums(manifest, paths)` — compare against destination
-- [ ] Write checksum manifest to checkpoint dir after Phase 3
-- [ ] Read and compare on destination in Phase 4
+- [x] `checksumFile(path)` — sha256 of a file
+- [x] `checksumDir(path)` — recursive sha256 tree (using `find | sha256sum`)
+- [x] `buildChecksumManifest(paths)` — generate checksum map on source
+- [x] `verifyChecksums(manifest, paths)` — compare against destination
+- [x] Write checksum manifest to checkpoint dir after Phase 3
+- [x] Read and compare on destination in Phase 4
 
 ### 6.2 `src/validation/health.ts`
-- [ ] `waitForPort(host, port, timeoutMs)` — poll TCP open with `net.createConnection`
-- [ ] `httpGet(url, timeoutMs)` — HTTP GET, return status code
-- [ ] `waitForHttp(url, expectedStatus, timeoutMs, pollInterval)` — poll until success
-- [ ] `waitForDockerHealthy(containerName, timeoutMs)` — poll `docker inspect` health status
-- [ ] `checkContainerRunning(containerName)` — boolean check
+- [x] `waitForPort(host, port, timeoutMs)` — poll TCP open with `net.createConnection`
+- [x] `httpGet(url, timeoutMs)` — HTTP GET, return status code
+- [x] `waitForHttp(url, expectedStatus, timeoutMs, pollInterval)` — poll until success
+- [x] `waitForDockerHealthy(containerName, timeoutMs)` — poll `docker inspect` health status
+- [x] `checkContainerRunning(containerName)` — boolean check
 
 ### 6.3 `src/validation/services.ts`
-- [ ] `startComposeProjects(projects)` — `docker compose up -d` in dependency order
-  - [ ] Start DB-only stacks first
-  - [ ] Wait for DB containers healthy before starting dependent stacks
-  - [ ] Start remaining stacks
-  - [ ] Return `ServiceResult[]`
-- [ ] `startPM2Apps(apps)` — `pm2 resurrect` then verify each app is online
-  - [ ] Fall back to `pm2 start ecosystem.config.js` if resurrect fails
-  - [ ] Return `ServiceResult[]`
-- [ ] `startNginxProxyManager(snapshot)` — `docker compose up -d` in NPM dir
-  - [ ] Wait for NPM admin port (81) to respond
-  - [ ] Return `ServiceResult`
-- [ ] `restoreDatabases(dbContainers)` — restore DB dumps on destination
-  - [ ] For Postgres: `psql < dump.sql` inside container
-  - [ ] For MySQL: `mysql < dump.sql` inside container
-  - [ ] For Redis: copy `dump.rdb` into volume and restart container
-  - [ ] For Mongo: `mongorestore --archive --gzip`
+- [x] `startComposeProjects(projects)` — `docker compose up -d` in dependency order
+  - [x] Start DB-only stacks first
+  - [x] Wait for DB containers healthy before starting dependent stacks
+  - [x] Start remaining stacks
+  - [x] Return `ServiceResult[]`
+- [x] `startPM2Apps(apps)` — `pm2 resurrect` then verify each app is online
+  - [x] Fall back to `pm2 start ecosystem.config.js` if resurrect fails
+  - [x] Return `ServiceResult[]`
+- [x] `startNginxProxyManager(snapshot)` — `docker compose up -d` in NPM dir
+  - [x] Wait for NPM admin port (81) to respond
+  - [x] Return `ServiceResult`
+- [x] `restoreDatabases(dbContainers)` — restore DB dumps on destination
+  - [x] For Postgres: `psql < dump.sql` inside container
+  - [x] For MySQL: `mysql < dump.sql` inside container
+  - [x] For Redis: copy `dump.rdb` into volume and restart container
+  - [x] For Mongo: `mongorestore --archive --gzip`
 
 ### 6.4 `src/core/reporter.ts`
-- [ ] `buildReport(ctx, serviceResults, transferResults)` — assemble `MigrationReport`
-- [ ] `printReport(report, log)` — formatted terminal output
-  - [ ] Header: source → destination, start/end time, total duration
-  - [ ] Section: Transferred Resources (table with name, size, duration, checksum)
-  - [ ] Section: Services (table with name, type, status ✓/✗, health check result)
-  - [ ] Section: Warnings (if any)
-  - [ ] Section: Next Steps (manual tasks if any services failed)
-- [ ] `saveReport(report, path)` — write JSON report to file
+- [x] `buildReport(ctx, serviceResults, transferResults)` — assemble `MigrationReport`
+- [x] `printReport(report, log)` — formatted terminal output
+  - [x] Header: source → destination, start/end time, total duration
+  - [x] Section: Transferred Resources (table with name, size, duration, checksum)
+  - [x] Section: Services (table with name, type, status ✓/✗, health check result)
+  - [x] Section: Warnings (if any)
+  - [x] Section: Next Steps (manual tasks if any services failed)
+- [x] `saveReport(report, path)` — write JSON report to file
 
 ### 6.5 `src/phases/phase4-validate.ts`
-- [ ] Step `validate.checksums`: verify all transferred files via checksum comparison
-- [ ] Step `validate.docker-volumes`: check all volume mountpoints exist and non-empty on dest
-- [ ] Step `validate.db-restore`: restore all DB dumps inside destination containers
-- [ ] Step `validate.compose-up`: start all Docker Compose projects in order
-- [ ] Step `validate.compose-health`: wait for all containers to become healthy
-- [ ] Step `validate.pm2-restore`: resurrect PM2 apps, verify status
-- [ ] Step `validate.nginx-restore`: start NPM, wait for admin port
-- [ ] Step `validate.service-health`: run configured HTTP health checks
-- [ ] Step `validate.report`: generate and display final report, save to file
-- [ ] Export `runPhase4(ctx: MigrationContext)` function
+- [x] Step `validate.checksums`: verify all transferred files via checksum comparison
+- [x] Step `validate.docker-volumes`: check all volume mountpoints exist and non-empty on dest
+- [x] Step `validate.db-restore`: restore all DB dumps inside destination containers
+- [x] Step `validate.compose-up`: start all Docker Compose projects in order
+- [x] Step `validate.compose-health`: wait for all containers to become healthy
+- [x] Step `validate.pm2-restore`: resurrect PM2 apps, verify status
+- [x] Step `validate.nginx-restore`: start NPM, wait for admin port
+- [x] Step `validate.service-health`: run configured HTTP health checks
+- [x] Step `validate.report`: generate and display final report, save to file
+- [x] Export `runPhase4(ctx: MigrationContext)` function
 
 ---
 
 ## Batch 7 — CLI Entry & Commands
 
 ### 7.1 `src/commands/source.ts`
-- [ ] Define `source` command with Commander
-- [ ] Required option: `--dest-host`
-- [ ] Optional options: `--dest-user`, `--dest-port`, `--retries`, `--resume`, `--dry-run`, `--yes`, `--verbose`
-- [ ] Load config file if `--config` path provided (Zod validate)
-- [ ] Merge config file with CLI options (CLI takes precedence)
-- [ ] Build `MigrationContext`
-- [ ] Check for existing checkpoint — prompt to resume or reset
-- [ ] Run Phase 1 → Phase 2 → Phase 3 → trigger Phase 4 on destination
-- [ ] Handle `MigrationError` — print error, point to log file, suggest `--resume`
+- [x] Define `source` command with Commander
+- [x] Required option: `--dest-host`
+- [x] Optional options: `--dest-user`, `--dest-port`, `--retries`, `--resume`, `--dry-run`, `--yes`, `--verbose`
+- [x] Load config file if `--config` path provided (Zod validate)
+- [x] Merge config file with CLI options (CLI takes precedence)
+- [x] Build `MigrationContext`
+- [x] Check for existing checkpoint — prompt to resume or reset
+- [x] Run Phase 1 → Phase 2 → Phase 3 → trigger Phase 4 on destination
+- [x] Handle `MigrationError` — print error, point to log file, suggest `--resume`
 
 ### 7.2 `src/commands/destination.ts`
-- [ ] Define `destination` command with Commander
-- [ ] Options: `--port` (coordination port, if using active mode)
-- [ ] Run Phase 1 (environment check on destination)
-- [ ] Wait for manifest from source (poll checkpoint dir or listen on port)
-- [ ] Run Phase 4 when triggered
+- [x] Define `destination` command with Commander
+- [x] Options: `--port` (coordination port, if using active mode)
+- [x] Run Phase 1 (environment check on destination)
+- [x] Wait for manifest from source (poll checkpoint dir or listen on port)
+- [x] Run Phase 4 when triggered
 
 ### 7.3 `src/commands/status.ts`
-- [ ] Read checkpoint file
-- [ ] If none found: print "No migration in progress"
-- [ ] If found: print full checkpoint summary
-  - [ ] Started at, last updated
-  - [ ] Current phase
-  - [ ] Completed steps (count + list)
-  - [ ] Failed step (if any) + error message
-  - [ ] Estimated completion (rough, based on steps done vs total)
+- [x] Read checkpoint file
+- [x] If none found: print "No migration in progress"
+- [x] If found: print full checkpoint summary
+  - [x] Started at, last updated
+  - [x] Current phase
+  - [x] Completed steps (count + list)
+  - [x] Failed step (if any) + error message
+  - [x] Estimated completion (rough, based on steps done vs total)
 
 ### 7.4 `src/commands/reset.ts`
-- [ ] Read checkpoint file — show summary of what will be cleared
-- [ ] Confirm with user: "This will clear all progress. Are you sure?"
-- [ ] Delete checkpoint file
-- [ ] Optionally: delete dump files in `DEFAULT_DUMP_DIR`
-- [ ] Print confirmation
+- [x] Read checkpoint file — show summary of what will be cleared
+- [x] Confirm with user: "This will clear all progress. Are you sure?"
+- [x] Delete checkpoint file
+- [x] Optionally: delete dump files in `DEFAULT_DUMP_DIR`
+- [x] Print confirmation
 
 ### 7.5 `src/index.ts`
-- [ ] Create Commander `program` with name, description, version
-- [ ] Register global options: `--config`, `--log-file`, `--verbose`, `--yes`, `--dry-run`
-- [ ] Register all subcommands: `source`, `destination`, `status`, `reset`
-- [ ] Initialize logger before any command runs (use `preSubcommand` hook)
-- [ ] Add top-level error handler: catch uncaught errors, log to file, print clean message
-- [ ] Set `process.exitCode` appropriately on failure
-- [ ] Call `program.parse(process.argv)`
+- [x] Create Commander `program` with name, description, version
+- [x] Register global options: `--config`, `--log-file`, `--verbose`, `--yes`, `--dry-run`
+- [x] Register all subcommands: `source`, `destination`, `status`, `reset`
+- [x] Initialize logger before any command runs (use `preSubcommand` hook)
+- [x] Add top-level error handler: catch uncaught errors, log to file, print clean message
+- [x] Set `process.exitCode` appropriately on failure
+- [x] Call `program.parse(process.argv)`
 
 ---
 
 ## Batch 8 — Polish & Docs
 
 ### 8.1 Dry-run mode
-- [ ] Pass `isDryRun` flag through `MigrationContext`
-- [ ] In `StepRunner.run()`: if dry-run, log what would happen and skip `step.run()`
-- [ ] In `rsync.ts`: print rsync command without executing
-- [ ] In `ssh.ts`: print remote commands without executing
-- [ ] Output dry-run summary: list all steps that would execute
+- [x] Pass `isDryRun` flag through `MigrationContext`
+- [x] In `StepRunner.run()`: if dry-run, log what would happen and skip `step.run()`
+- [x] In `rsync.ts`: print rsync command without executing
+- [x] In `ssh.ts`: print remote commands without executing
+- [x] Output dry-run summary: list all steps that would execute
 
 ### 8.2 Interrupt handling
-- [ ] Catch `SIGINT` and `SIGTERM`
-- [ ] On interrupt: save checkpoint, close SSH connection, print resume instructions
-- [ ] Do not leave partial rsync transfers without noting them in checkpoint
+- [x] Catch `SIGINT` and `SIGTERM`
+- [x] On interrupt: save checkpoint, close SSH connection, print resume instructions
+- [x] Do not leave partial rsync transfers without noting them in checkpoint
 
 ### 8.3 Config file generation
-- [ ] `vortex-shift init` command (or `--save-config` flag) — write `vortex-shift.json` with current options
-- [ ] Useful for repeatable or scheduled migrations
+- [x] `vortex-shift init` command (or `--save-config` flag) — write `vortex-shift.json` with current options
+- [x] Useful for repeatable or scheduled migrations
 
 ### 8.4 `CLAUDE.md`
-- [ ] Document build/lint/test commands
-- [ ] Document architecture (phases, core abstractions)
-- [ ] Document how `StepRunner` and `MigrationContext` work
-- [ ] Document checkpoint file location and schema
-- [ ] Document how to add a new phase step
+- [x] Document build/lint/test commands
+- [x] Document architecture (phases, core abstractions)
+- [x] Document how `StepRunner` and `MigrationContext` work
+- [x] Document checkpoint file location and schema
+- [x] Document how to add a new phase step
 
 ### 8.5 `README.md`
-- [ ] Installation section (npm install -g / npx / binary)
-- [ ] Prerequisites section (Rocky Linux, Docker, rsync)
-- [ ] Quick start section (source + destination commands)
-- [ ] Configuration section (vortex-shift.json reference)
-- [ ] How it works section (phases overview)
-- [ ] Troubleshooting section (common errors + fixes)
+- [x] Installation section (npm install -g / npx / binary)
+- [x] Prerequisites section (Rocky Linux, Docker, rsync)
+- [x] Quick start section (source + destination commands)
+- [x] Configuration section (vortex-shift.json reference)
+- [x] How it works section (phases overview)
+- [x] Troubleshooting section (common errors + fixes)
 
 ### 8.6 Error message audit
-- [ ] Review every thrown error — ensure message includes "what happened", "why", "what to do"
-- [ ] Add SSH manual test command to all SSH errors
-- [ ] Add rsync resume hint to all transfer errors
-- [ ] Add `vortex-shift status` hint on any mid-migration failure
+- [x] Review every thrown error — ensure message includes "what happened", "why", "what to do"
+- [x] Add SSH manual test command to all SSH errors
+- [x] Add rsync resume hint to all transfer errors
+- [x] Add `vortex-shift status` hint on any mid-migration failure
 
 ---
 
 ## Batch 9 — Testing
 
 ### 9.1 Unit tests — `src/core/checkpoint.test.ts`
-- [ ] `loadCheckpoint` returns null when file missing
-- [ ] `loadCheckpoint` parses valid checkpoint correctly
-- [ ] `saveCheckpoint` writes atomically (check temp file renamed)
-- [ ] `markStepComplete` adds step ID to completedSteps
-- [ ] `markStepFailed` sets failedStep and error
-- [ ] `isStepDone` returns true for completed, false for pending
-- [ ] `clearCheckpoint` removes file
+- [x] `loadCheckpoint` returns null when file missing
+- [x] `loadCheckpoint` parses valid checkpoint correctly
+- [x] `saveCheckpoint` writes atomically (check temp file renamed)
+- [x] `markStepComplete` adds step ID to completedSteps
+- [x] `markStepFailed` sets failedStep and error
+- [x] `isStepDone` returns true for completed, false for pending
+- [x] `clearCheckpoint` removes file
 
 ### 9.2 Unit tests — `src/core/executor.test.ts`
-- [ ] Steps already in completedSteps are skipped
-- [ ] Successful step is added to completedSteps
-- [ ] Failed step is retried N times before throwing
-- [ ] `MigrationError` includes correct stepId
-- [ ] Checkpoint is saved after each completed step
-- [ ] Context is not mutated on skipped step
+- [x] Steps already in completedSteps are skipped
+- [x] Successful step is added to completedSteps
+- [x] Failed step is retried N times before throwing
+- [x] `MigrationError` includes correct stepId
+- [x] Checkpoint is saved after each completed step
+- [x] Context is not mutated on skipped step
 
 ### 9.3 Unit tests — `src/utils/format.test.ts`
-- [ ] `formatBytes` — 0, bytes, KB, MB, GB ranges
-- [ ] `formatDuration` — seconds, minutes, hours
-- [ ] `formatDate` — ISO input → readable output
+- [x] `formatBytes` — 0, bytes, KB, MB, GB ranges
+- [x] `formatDuration` — seconds, minutes, hours
+- [x] `formatDate` — ISO input → readable output
 
 ### 9.4 Unit tests — `src/core/ssh.test.ts`
-- [ ] `detectSSHKey` returns first found key in priority order
-- [ ] `detectSSHKey` returns null when none found
-- [ ] `SSHClient.exec` throws `SSHError` on non-zero exit
+- [x] `detectSSHKey` returns first found key in priority order
+- [x] `detectSSHKey` returns null when none found
+- [x] `SSHClient.exec` throws `SSHError` on non-zero exit
 
 ### 9.5 Unit tests — `src/core/rsync.test.ts`
-- [ ] Progress parser extracts file, bytes, speed from rsync output line
-- [ ] Constructs correct rsync command string
-- [ ] Throws on non-zero rsync exit
+- [x] Progress parser extracts file, bytes, speed from rsync output line
+- [x] Constructs correct rsync command string
+- [x] Throws on non-zero rsync exit
 
 ### 9.6 Unit tests — `src/inventory/docker.test.ts`
-- [ ] `discoverComposeProjects` parses compose YAML correctly
-- [ ] Excludes `/proc`, `/sys`, `/dev` paths
-- [ ] Identifies DB services from known image names
+- [x] `discoverComposeProjects` parses compose YAML correctly
+- [x] Excludes `/proc`, `/sys`, `/dev` paths
+- [x] Identifies DB services from known image names
 
 ### 9.7 Unit tests — `src/types/config.ts` (Zod validation)
-- [ ] Valid config passes validation
-- [ ] Missing required field fails validation
-- [ ] Invalid SSH port (string) fails validation
+- [x] Valid config passes validation
+- [x] Missing required field fails validation
+- [x] Invalid SSH port (string) fails validation
 
 ### 9.8 Integration tests — full migration flow
-- [ ] Spin up two Rocky Linux Docker containers (source + destination)
-- [ ] Install Docker-in-Docker on source
-- [ ] Deploy a simple Compose project (nginx + postgres) on source
-- [ ] Run `vortex-shift source` against destination container
-- [ ] Assert Compose project is running on destination
-- [ ] Assert health check passes
+- [~] Spin up two Rocky Linux Docker containers (source + destination)
+- [~] Install Docker-in-Docker on source
+- [~] Deploy a simple Compose project (nginx + postgres) on source
+- [~] Run `vortex-shift source` against destination container
+- [~] Assert Compose project is running on destination
+- [~] Assert health check passes
 
 ### 9.9 Integration tests — resume behavior
-- [ ] Run migration, kill process mid-transfer
-- [ ] Verify checkpoint file exists and has correct state
-- [ ] Re-run with `--resume`
-- [ ] Assert only remaining steps execute (completed steps skipped)
+- [~] Run migration, kill process mid-transfer
+- [~] Verify checkpoint file exists and has correct state
+- [~] Re-run with `--resume`
+- [~] Assert only remaining steps execute (completed steps skipped)
 
 ### 9.10 Integration tests — retry behavior
-- [ ] Mock rsync to fail twice then succeed
-- [ ] Assert transfer eventually completes
-- [ ] Assert correct number of attempts logged
+- [~] Mock rsync to fail twice then succeed
+- [~] Assert transfer eventually completes
+- [~] Assert correct number of attempts logged
 
 ---
 
 ## Batch 10 — Release
 
 ### 10.1 Binary packaging
-- [ ] Configure `pkg` to bundle into standalone binaries (linux-x64, linux-arm64)
-- [ ] Add `npm run package` script
-- [ ] Test standalone binary on clean Rocky Linux VM (no Node.js installed)
+- [x] Configure `pkg` to bundle into standalone binaries (linux-x64, linux-arm64)
+- [x] Add `npm run package` script
+- [~] Test standalone binary on clean Rocky Linux VM (no Node.js installed)
 
 ### 10.2 CI / GitHub Actions
-- [ ] Lint and typecheck on every push
-- [ ] Run unit tests on every push
-- [ ] Build and verify `dist/` compiles cleanly
-- [ ] Release workflow: tag → build binaries → attach to GitHub Release
+- [x] Lint and typecheck on every push
+- [x] Run unit tests on every push
+- [x] Build and verify `dist/` compiles cleanly
+- [x] Release workflow: tag → build binaries → attach to GitHub Release
 
 ### 10.3 Version management
-- [ ] Implement `vortex-shift --version` (from package.json)
-- [ ] Add checkpoint schema `version` field — handle migration if schema changes
-- [ ] Changelog file (`CHANGELOG.md`)
+- [x] Implement `vortex-shift --version` (from package.json)
+- [x] Add checkpoint schema `version` field — handle migration if schema changes
+- [x] Changelog file (`CHANGELOG.md`)
 
 ### 10.4 `install.sh` — one-line remote installer
-- [ ] Create `install.sh` at repo root
-- [ ] Detect CPU architecture (`uname -m`) — map to `linux-x64` or `linux-arm64`
-- [ ] Detect OS — warn and exit if not Linux
-- [ ] Resolve latest release version from GitHub API (`https://api.github.com/repos/USER/vortex-shift/releases/latest`)
-- [ ] Download correct binary from GitHub Releases with `curl -fsSL`
-- [ ] Place binary at `/usr/local/bin/vortex-shift` and `chmod +x`
-- [ ] Verify install: run `vortex-shift --version` after placement
-- [ ] Print success message with quick-start command
-- [ ] Handle missing `curl` gracefully (suggest `dnf install curl`)
-- [ ] Add install script URL to README under "Installation"
-- [ ] Test one-liner works on clean Rocky Linux VM:
+- [x] Create `install.sh` at repo root
+- [x] Detect CPU architecture (`uname -m`) — map to `linux-x64` or `linux-arm64`
+- [x] Detect OS — warn and exit if not Linux
+- [x] Resolve latest release version from GitHub API (`https://api.github.com/repos/USER/vortex-shift/releases/latest`)
+- [x] Download correct binary from GitHub Releases with `curl -fsSL`
+- [x] Place binary at `/usr/local/bin/vortex-shift` and `chmod +x`
+- [x] Verify install: run `vortex-shift --version` after placement
+- [x] Print success message with quick-start command
+- [x] Handle missing `curl` gracefully (suggest `dnf install curl`)
+- [x] Add install script URL to README under "Installation"
+- [~] Test one-liner works on clean Rocky Linux VM:
   ```bash
   curl -fsSL https://raw.githubusercontent.com/USER/vortex-shift/main/install.sh | bash
   ```
 
 ### 10.5 CI — automate install script on release
-- [ ] In GitHub Actions release workflow: after binaries are attached, update `install.sh` `VERSION` default if hardcoded
-- [ ] Smoke-test `install.sh` in CI on Rocky Linux container as part of release job
+- [x] In GitHub Actions release workflow: after binaries are attached, update `install.sh` `VERSION` default if hardcoded
+- [x] Smoke-test `install.sh` in CI on Rocky Linux container as part of release job
 
 ### 10.6 Pre-release checklist
-- [ ] All unit tests pass
-- [ ] Integration test passes against fresh Rocky Linux containers
-- [ ] Dry-run mode tested end-to-end
-- [ ] Resume behavior tested (kill mid-transfer, restart)
-- [ ] Error messages reviewed for clarity
-- [ ] README complete and accurate
-- [ ] Binary tested on clean VM
-- [ ] `install.sh` one-liner tested on clean Rocky Linux VM
+- [x] All unit tests pass
+- [~] Integration test passes against fresh Rocky Linux containers
+- [~] Dry-run mode tested end-to-end
+- [~] Resume behavior tested (kill mid-transfer, restart)
+- [~] Error messages reviewed for clarity
+- [x] README complete and accurate
+- [~] Binary tested on clean VM
+- [~] `install.sh` one-liner tested on clean Rocky Linux VM
 
 ---
 
-*Last updated: 2025-05-06*
+*Last updated: 2026-05-06*
 *Total tasks: ~195 items across 10 batches*

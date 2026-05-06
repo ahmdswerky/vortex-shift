@@ -16,7 +16,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && pkg ."
+    "package": "npm run build && PKG_CACHE_PATH=/tmp/.pkg-cache pkg ."
   },
   "dependencies": {
     "chalk": "^5.4.1",
@@ -46,7 +46,8 @@
   },
   "pkg": {
     "targets": [
-      "node20-linux-x64"
+      "node18-linux-x64",
+      "node18-linux-arm64"
     ],
     "outputPath": "bin"
   }

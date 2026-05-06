@@ -26,7 +26,7 @@ async function getFileChecksum(filePath: string): Promise<string> {
 
   await new Promise<void>((resolve, reject) => {
     const stream = createReadStream(filePath)
-    stream.on('data', (chunk: Buffer) => {
+    stream.on('data', (chunk: string | Buffer) => {
       hash.update(chunk)
     })
     stream.on('error', reject)

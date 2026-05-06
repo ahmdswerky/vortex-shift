@@ -2,7 +2,6 @@ import { execa, type Options as ExecaOptions } from 'execa'
 
 const ANSI_REGEX =
   // biome-ignore lint/suspicious/noControlCharactersInRegex: needed for ANSI stripping
-  // eslint-disable-next-line no-control-regex
   /\u001B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g
 
 export interface RunOptions extends ExecaOptions {
