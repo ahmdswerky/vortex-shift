@@ -5,10 +5,11 @@
   "private": true,
   "type": "module",
   "bin": {
-    "vortex-shift": "./dist/index.js"
+    "vortex-shift": "./dist/bundle.cjs"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/bundle.cjs --external:cpu-features --external:sshcrypto --external:*.node",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
@@ -16,7 +17,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build && PKG_CACHE_PATH=/tmp/.pkg-cache pkg ."
+    "package": "npm run bundle && PKG_CACHE_PATH=/tmp/.pkg-cache pkg ."
   },
   "dependencies": {
     "chalk": "^5.4.1",
@@ -37,8 +38,9 @@
     "@types/node": "^22.15.18",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
+    "@yao-pkg/pkg": "^6.19.0",
+    "esbuild": "^0.28.0",
     "eslint": "^9.26.0",
-    "pkg": "^5.8.1",
     "prettier": "^3.5.3",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
@@ -46,8 +48,8 @@
   },
   "pkg": {
     "targets": [
-      "node18-linux-x64",
-      "node18-linux-arm64"
+      "node20-linux-x64",
+      "node20-linux-arm64"
     ],
     "outputPath": "bin"
   }
